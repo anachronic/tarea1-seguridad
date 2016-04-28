@@ -4,7 +4,7 @@ import sys
 import os
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.backends import default_backend
 
 
@@ -28,10 +28,11 @@ def encriptar(texto, key):
     encryptor = cipher.encryptor()
 
     texto = texto.encode()
-    while len(texto) % 16 != 0:
-        texto = texto + b"0"
+    padder = padding.PKCS7(128).padder()
+    texto = padder.update(texto)
+    texto += padder.finalize()
 
-    textocifrado = encryptor.update(texto) + encryptor.finalize()
+    textocifrado = iv + encryptor.update(texto) + encryptor.finalize()
 
     return textocifrado
 
@@ -45,12 +46,14 @@ def decriptar(cifrado, key):
     # le tomamos digest y tenemos nuestros 16 bytez.
     keydigest = digest.finalize()
 
-    cifrado = cifrado.encode()
     cipher = Cipher(algorithms.AES(keydigest), modes.CBC(
-        os.urandom(16)), backend=default_backend())
+        cifrado[:16]), backend=default_backend())
 
     decryptor = cipher.decryptor()
-    return decryptor.update(cifrado) + decryptor.finalize()
+
+    texto_no_tan_plano = decryptor.update(cifrado[16:]) + decryptor.finalize()
+    unpadder = padding.PKCS7(128).unpadder()
+    return unpadder.update(texto_no_tan_plano) + unpadder.finalize()
 
 
 # aqui me pasa la cuenta no saber suficiente Python :(
@@ -80,17 +83,14 @@ def parsear_input(entrada):
     return bytes(bytez)
 
 
-print(parsear_input(sys.stdin.readline()))
-
-
-# if __name__ == "__main__":
-#     if sys.argv[1] == '-e':
-#         print("Ingrese el texto a encriptar. (<Intro> para terminar)")
-#         texto = sys.stdin.readline()
-#         print(str(encriptar(texto, str(sys.argv[2]))))
-#     elif sys.argv[1] == '-d':
-#         print("Ingrese el texto a decriptar. (<Intro> para terminar)")
-#         texto = sys.stdin.readline()
-#         print(str(decriptar(texto, str(sys.argv[2]))))
-# else:
-#     usage()
+if __name__ == "__main__":
+    if sys.argv[1] == '-e':
+        print("Ingrese el texto a encriptar. (<Intro> para terminar)")
+        texto = sys.stdin.readline()
+        print(str(encriptar(texto, str(sys.argv[2]))))
+    elif sys.argv[1] == '-d':
+        print("Ingrese el texto a decriptar. (<Intro> para terminar)")
+        texto = sys.stdin.readline()
+        print(str(decriptar(parsear_input(texto), str(sys.argv[2]))))
+    else:
+        usage()
