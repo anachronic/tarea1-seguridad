@@ -27,7 +27,6 @@ def encriptar(texto, key):
                     modes.CBC(iv), backend=default_backend())
     encryptor = cipher.encryptor()
 
-    texto = texto.encode()
     padder = padding.PKCS7(128).padder()
     texto = padder.update(texto)
     texto += padder.finalize()
@@ -65,7 +64,17 @@ def parsear_input(entrada):
     for c in entrada:
         if c == '\n':
             continue
+
+        # esto es HORRIBLE, lo se, pero que le vamos a hacerle :(
         if hexa and c == 'x':
+            continue
+        if hexa and c == 'n':
+            bytez.append(10)
+            hexa = False
+            continue
+        if hexa and c == 'r':
+            bytez.append(13)
+            hexa = False
             continue
 
         if not hexa and c != '\\':
@@ -87,7 +96,7 @@ if __name__ == "__main__":
     if sys.argv[1] == '-e':
         print("Ingrese el texto a encriptar. (<Intro> para terminar)")
         texto = sys.stdin.readline()
-        print(str(encriptar(texto, str(sys.argv[2]))))
+        print(str(encriptar(parsear_input(texto), str(sys.argv[2]))))
     elif sys.argv[1] == '-d':
         print("Ingrese el texto a decriptar. (<Intro> para terminar)")
         texto = sys.stdin.readline()
