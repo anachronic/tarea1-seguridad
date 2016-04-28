@@ -16,6 +16,7 @@ def usage():
 
 
 # Retorna texto cifrado via AES-CBC con clave key.
+# Nota: texto es texto BINARIO.
 def encriptar(texto, key):
     # primero hashear la clave para obtener 256 bits.
     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
@@ -38,7 +39,7 @@ def encriptar(texto, key):
 
 
 # Retorna el texto plano usando cifrador de bloque AES-CBC con clave key.
-# Nota: cifrado viene sin el "b" al principio. (b de string binario)
+# Nota: cifrado es texto BINARIO.
 def decriptar(cifrado, key):
     # primero hashear la clave para obtener 256 bits.
     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
