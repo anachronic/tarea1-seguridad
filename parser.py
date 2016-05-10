@@ -19,6 +19,10 @@ def parsear_input(entrada):
             bytez.append(13)
             hexa = False
             continue
+        if hexa and c == 't':
+            bytez.append(9)
+            hexa = False
+            continue
 
         if not hexa and c != '\\':
             bytez.append(ord(c))
